@@ -1,4 +1,4 @@
-package com.example.myapplication
+package com.example.TranslatorPrj
 
 import android.net.Uri
 import android.os.Bundle
@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
@@ -32,7 +34,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
-import com.example.myapplication.ui.theme.MyApplicationTheme
+import com.example.TranslatorPrj.ui.theme.TranslatorPrjTheme
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.korean.KoreanTextRecognizerOptions
@@ -42,7 +44,7 @@ class GalleryActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            MyApplicationTheme {
+            TranslatorPrjTheme {
                 GalleryScreen()
             }
         }
@@ -52,10 +54,13 @@ class GalleryActivity : ComponentActivity() {
 
 @Composable
 fun GalleryScreen() {
-    Column(modifier = Modifier.fillMaxSize()
-        .padding(bottom = 100.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Bottom) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(50.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        var visible by remember { mutableStateOf(false) }
         var imageUri by remember {
             mutableStateOf<Uri?>(null)
         }
@@ -71,31 +76,36 @@ fun GalleryScreen() {
                     val image = InputImage.fromFilePath(context, uri)
                     recognizer.process(image)
                         .addOnSuccessListener { visionText ->
+                            visible = false
                             output = visionText.text
                         }
                         .addOnFailureListener { e ->
                             Toast.makeText(context, "텍스트 인식에 실패했습니다.", Toast.LENGTH_SHORT).show()
                         }
                 } else {
-                    // uri가 비어 있는 경우 처리
+                    visible = false
                 }
             }
-        Image(
-            painter = rememberAsyncImagePainter(imageUri),
-            contentDescription = "imagei",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(10.dp)
-                .clip(RoundedCornerShape(50.dp))
-                .border(
-                    width = 5.dp,
-                    color = Color.Black
-                )
-        )
-        Button(onClick = {
-            pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-        }) {
+        if (visible) {
+            Image(
+                painter = rememberAsyncImagePainter(imageUri),
+                contentDescription = "imagei",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(10.dp)
+                    .clip(RoundedCornerShape(50.dp))
+                    .border(
+                        width = 5.dp,
+                        color = Color.Black
+                    )
+            )
+        }
+        Button(
+            modifier = Modifier.width(130.dp),
+            onClick = {
+                pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+            }) {
             Text(text = "사진 변경")
         }
         Text(text = output)
