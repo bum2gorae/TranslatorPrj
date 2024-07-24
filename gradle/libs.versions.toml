@@ -11,6 +11,9 @@ composeBom = "2024.06.00"
 playServicesMlkitTextRecognitionCommon = "19.0.0"
 playServicesMlkitTextRecognitionKorean = "16.0.0"
 translate = "17.0.2"
+playServicesMlkitTextRecognitionJapanese = "16.0.0"
+playServicesMlkitTextRecognition = "19.0.0"
+playServicesMlkitTextRecognitionChinese = "16.0.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -30,6 +33,9 @@ androidx-material3 = { group = "androidx.compose.material3", name = "material3" 
 play-services-mlkit-text-recognition-common = { group = "com.google.android.gms", name = "play-services-mlkit-text-recognition-common", version.ref = "playServicesMlkitTextRecognitionCommon" }
 play-services-mlkit-text-recognition-korean = { group = "com.google.android.gms", name = "play-services-mlkit-text-recognition-korean", version.ref = "playServicesMlkitTextRecognitionKorean" }
 translate = { group = "com.google.mlkit", name = "translate", version.ref = "translate" }
+play-services-mlkit-text-recognition-japanese = { group = "com.google.android.gms", name = "play-services-mlkit-text-recognition-japanese", version.ref = "playServicesMlkitTextRecognitionJapanese" }
+play-services-mlkit-text-recognition = { group = "com.google.android.gms", name = "play-services-mlkit-text-recognition", version.ref = "playServicesMlkitTextRecognition" }
+play-services-mlkit-text-recognition-chinese = { group = "com.google.android.gms", name = "play-services-mlkit-text-recognition-chinese", version.ref = "playServicesMlkitTextRecognitionChinese" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

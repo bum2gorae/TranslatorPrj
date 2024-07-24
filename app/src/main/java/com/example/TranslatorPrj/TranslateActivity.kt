@@ -1,12 +1,17 @@
 package com.example.TranslatorPrj
 
+import android.app.Activity
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -35,6 +40,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.ClipboardManager
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.TranslatorPrj.ui.theme.TranslatorPrjTheme
@@ -43,6 +53,12 @@ import com.google.mlkit.nl.translate.TranslateLanguage
 import com.google.mlkit.nl.translate.Translation
 import com.google.mlkit.nl.translate.Translator
 import com.google.mlkit.nl.translate.TranslatorOptions
+import com.google.mlkit.vision.text.TextRecognition
+import com.google.mlkit.vision.text.TextRecognizer
+import com.google.mlkit.vision.text.chinese.ChineseTextRecognizerOptions
+import com.google.mlkit.vision.text.japanese.JapaneseTextRecognizerOptions
+import com.google.mlkit.vision.text.korean.KoreanTextRecognizerOptions
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 
 class TranslateActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -55,6 +71,9 @@ class TranslateActivity : ComponentActivity() {
                         .fillMaxSize()
                         .padding(20.dp)
                 ) {
+                    val clipboardManager: ClipboardManager = LocalClipboardManager.current
+                    val contextAct = LocalContext.current as Activity?
+                    val context = LocalContext.current
                     val bgColor = Color(0xfff9defa)
                     var inputText by remember { mutableStateOf("") }
                     var tranText by remember { mutableStateOf("") }
@@ -105,6 +124,7 @@ class TranslateActivity : ComponentActivity() {
                     ) {
                         ChooseLanguageDropDown(selectedGoalOption,
                             bgColor,
+
                             onClickSuccess = {
                                 isDownloaded = false
                                 selectedGoalOption = it
@@ -112,18 +132,26 @@ class TranslateActivity : ComponentActivity() {
                             }
                         )
                     }
-                    TransField(tranText)
+                    TransField(tranText,
+                        onTapSuccess = {
+                            clipboardManager.setText(AnnotatedString(tranText))
+                            Toast.makeText(context, "클립보드에 복사되었습니다", Toast.LENGTH_SHORT).show()
+                        })
                     Spacer(modifier = Modifier.size(20.dp))
-                    Column(
+                    Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        horizontalArrangement = Arrangement.Center,
                     ) {
                         TranslationButton(isDownloaded = isDownloaded,
                             onClickSuccess = {
                                 translator.translate(inputText)
                                     .addOnSuccessListener { tranText = it }
-                            }
+                            },
+                            Modifier.size(height = 50.dp, width = 100.dp)
                         )
+                        Spacer(modifier = Modifier.size(20.dp))
+                        FinishButton(onClickSuccess = { contextAct?.finish() },
+                            Modifier.size(height = 50.dp, width = 100.dp))
                     }
                 }
             }
@@ -136,10 +164,11 @@ class TranslateActivity : ComponentActivity() {
 fun ChooseLanguageDropDown(
     selectedOption: String,
     bgColor: Color,
-    onClickSuccess: (String) -> Unit
+    onClickSuccess: (String) -> Unit,
+    optionPick: Boolean = true
 ) {
     var expanded by remember { mutableStateOf(false) }
-    val options = TranslateTargetLanguage.values()
+    val options = if (optionPick) LangEnum.TranslateTargetLanguage.values() else LangEnum.RecognizeTargetLanguage.values()
 
     Column(modifier = Modifier.size(width = 150.dp, height = 60.dp)) {
         ExposedDropdownMenuBox(
@@ -216,6 +245,7 @@ fun InputField(inputText: String, onValueChangeListener: (String) -> Unit) {
 @Composable
 fun TransField(
     tranText: String,
+    onTapSuccess: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -227,6 +257,13 @@ fun TransField(
                 shape = RoundedCornerShape(20.dp)
             )
             .padding(15.dp)
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onTap = {
+                        onTapSuccess()
+                    }
+                )
+            }
     ) {
         Text(
             text = tranText,
@@ -238,9 +275,11 @@ fun TransField(
 @Composable
 fun TranslationButton(
     isDownloaded: Boolean,
-    onClickSuccess: () -> Unit
+    onClickSuccess: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Button(
+        modifier = modifier,
         onClick = {
             onClickSuccess()
         },
@@ -253,11 +292,28 @@ fun TranslationButton(
     }
 }
 
+@Composable
+fun FinishButton(
+    onClickSuccess: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Button(
+        modifier = modifier,
+        onClick = {
+            onClickSuccess()
+        },
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color(0xFFd69f47)
+        )
+    ) {
+        Text(text = "돌아가기")
+    }
+}
 
 fun getTranslator(startLang: String, targetLang: String): Translator {
     val options = TranslatorOptions.Builder()
-        .setSourceLanguage(TranslateTargetLanguage.valueOf(startLang).targetLanguage)
-        .setTargetLanguage(TranslateTargetLanguage.valueOf(targetLang).targetLanguage)
+        .setSourceLanguage(LangEnum.TranslateTargetLanguage.valueOf(startLang).targetLanguage)
+        .setTargetLanguage(LangEnum.TranslateTargetLanguage.valueOf(targetLang).targetLanguage)
         .build()
     return Translation.getClient(options)
 }
@@ -275,14 +331,4 @@ fun downloadTranslator(
         .addOnFailureListener { e ->
             Log.e("translator_test", "Download failed", e)
         }
-}
-
-enum class TranslateTargetLanguage(val targetLanguage: String) {
-    Korean(TranslateLanguage.KOREAN),
-    English(TranslateLanguage.ENGLISH),
-    Japanese(TranslateLanguage.JAPANESE),
-    Chinese(TranslateLanguage.CHINESE),
-    Spanish(TranslateLanguage.SPANISH),
-    Portuguese(TranslateLanguage.PORTUGUESE),
-    French(TranslateLanguage.FRENCH)
 }
